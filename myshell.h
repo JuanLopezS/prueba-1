@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 
 char *validator_getline(void);
-
+int _memory(char *buffer);
+int exit1(char **command);
 
 #endif

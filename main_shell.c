@@ -6,21 +6,21 @@
  **/
 int main(void)
 {
-	char *buffer = NULL, delim[3] = " \n\t", **command, *tok;
+        char *buffer = NULL, delim[3] = " \n\t", **command, *tok;
 	int status, i, len, ex;
 	pid_t pidC;
 
 	while(1)
 	{
-		printf("MyPrompt$ ");
+	        write(1, "MyPrompt$ ", 10);
 		buffer = validator_getline();
 		if (buffer  == NULL)
 			continue;
-	       	len = strlen(buffer);
-		command = malloc(len * sizeof(*command));
+		len = _memory(buffer);
+		command = malloc(sizeof(*command) * (len + 1));
 		if(command == NULL)
 		{
-			perror("error allocated memory");
+			perror("Error allocated memory");
 			continue;
 		}
 		else
@@ -33,12 +33,22 @@ int main(void)
 				i++;
 			}
 			command[i] = 0;
+			exit1(command);
 			pidC = fork();
+			if (pidC == -1)
+			  {
+			    perror("Error:");
+			    return (-1);
+			  }
 			if (pidC == 0)
 			{
 				ex = execve(command[0], command, NULL);
 				if(ex == -1)
 					perror("Error");
+				i = 0;
+				while (command[i])
+				  free(command[i++]);
+				free(command);
 			}
 			else
 			{
@@ -46,7 +56,6 @@ int main(void)
 			}
 		}
 		free(buffer);
-		free(command);
 		i = 0;
 	}
 	return (0);
@@ -69,14 +78,14 @@ char *validator_getline(void)
 	ret = getline(&buffer, &bufsize, stdin);
 	if(!buffer)
 	{
-		perror("Error in Allocate Memory");
+		perror("Error in Allocate Memory Buffer");
 		return(NULL);
 	}
 	if(ret == EOF)
 	{
 		free(buffer);
 		perror("EOF");
-		exit(1);
+		exit(0);
 	}
 	if(ret == 1)
 	{
@@ -89,7 +98,44 @@ char *validator_getline(void)
 
 /**
 
-STRTOK
+_memory
 
 
 */
+
+int _memory(char *buffer)
+{
+    int i , j, count = 1;
+    char *delim = " ";
+
+    for(i = 0; buffer[i] != '\0'; i++)
+      {
+	for (j = 0; delim[j] != '\0'; j ++)
+	  {
+	    if (buffer[i] == delim[j])
+	      count++;
+	  }
+      }
+    return (count);
+}
+
+/**
+
+_exit
+
+ */
+
+int exit1(char **command)
+{
+  int ret, i = 0;
+
+  ret = strcmp(command[0], "exit");
+  if (ret == 0)
+    {
+      while (command[i])
+	free(command[i++]);
+      free(command);
+      exit(0);
+    }
+  return (0);
+}
