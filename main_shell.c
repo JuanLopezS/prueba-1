@@ -6,7 +6,7 @@
  **/
 int main(void)
 {
-        char *buffer = NULL, delim[3] = " \n\t", **command, *tok;
+  char *buffer = NULL, delim[3] = " \n\t", **command, *tok, *funct;
 	int status, i, len, ex;
 	pid_t pidC;
 
@@ -17,7 +17,7 @@ int main(void)
 		if (buffer  == NULL)
 			continue;
 		len = _memory(buffer);
-		command = malloc(sizeof(*command) * (len + 1));
+		command = malloc(sizeof(char *) * len);
 		if(command == NULL)
 		{
 			perror("Error allocated memory");
@@ -33,7 +33,13 @@ int main(void)
 				i++;
 			}
 			command[i] = 0;
+			printf("c[0]= %s\n",command[0]);
 			exit1(command);
+			
+			funct = validator_function(command);
+			//strncpy(funct, command[0],100);
+			//printf("c[1]= %s, f = %s\n",command[0], funct);
+			//funct = command[0];
 			pidC = fork();
 			if (pidC == -1)
 			  {
@@ -42,12 +48,11 @@ int main(void)
 			  }
 			if (pidC == 0)
 			{
-				ex = execve(command[0], command, NULL);
+			  ex = execve(funct, command, NULL);
 				if(ex == -1)
-					perror("Error");
+				      perror("Error Command");
+				  
 				i = 0;
-				while (command[i])
-				  free(command[i++]);
 				free(command);
 			}
 			else
@@ -60,6 +65,83 @@ int main(void)
 	}
 	return (0);
 }
+
+
+/**
+VALIDATOR _ FUNCTION
+
+ */
+char *validator_function(char **command)
+{
+        int i;
+	char delim[1]= ":", **token, *tok, *buffer;
+	int len;
+	char function[50];
+	char *temp;
+	
+	//buffer = getenv("PATH");
+	//len = strlen(buffer);
+	i = 0;
+
+	buffer = getenv("PATH");
+	len = _memory(buffer);
+	token = malloc(len * sizeof(char*));
+	if(token == NULL)
+		perror("error allocated memory");
+	else
+	{
+		tok = strtok(buffer, delim);
+		i = 0;
+		while (tok)
+		{
+			token[i] = tok;
+			tok = strtok(NULL, delim);
+			i++;
+		}
+		token[i] = 0;
+	}
+	i = 0;
+	
+	temp = malloc((strlen(command[0]) + 1));
+	if (temp ==NULL)
+	  return(NULL);
+	while (token[i])
+	{
+	  DIR *d;
+	  struct dirent *dir;
+	  d = opendir(token[i]);
+	  if (d)
+	    {
+	      while ((dir = readdir(d)) != NULL)
+		{
+		  if((strcmp(dir->d_name, command[0])) == 0)
+		    {
+		      strcpy(temp, token[i]);
+		      strcat(temp, "/");
+		      strcat(temp, dir->d_name);
+		      printf("folder : %s\n", temp);
+		      closedir(d);
+		      free(token);
+		      return(temp);
+
+		      // printf("folder : %s\n", temp);
+		      //char *av[] = {temp,NULL};
+		      //execve(av[0],av,NULL);
+		    }
+		}
+	      closedir(d);
+	      i++;
+		
+	    }
+	  
+	}
+	free(token);
+	temp = command[0];
+	return(temp);
+}
+
+	
+
 
 
 /**
@@ -106,7 +188,7 @@ _memory
 int _memory(char *buffer)
 {
     int i , j, count = 1;
-    char *delim = " ";
+    char *delim = " :";
 
     for(i = 0; buffer[i] != '\0'; i++)
       {
@@ -128,14 +210,15 @@ _exit
 int exit1(char **command)
 {
   int ret, i = 0;
-
-  ret = strcmp(command[0], "exit");
-  if (ret == 0)
+  
+  if (command[1] == NULL)
     {
-      while (command[i])
-	free(command[i++]);
-      free(command);
-      exit(0);
+      ret = strcmp(command[0], "exit");
+      if (ret == 0)
+	{
+	  free(command);
+	  exit(0);
+	}
     }
-  return (0);
+ return (0);
 }

@@ -32,20 +32,17 @@ char *_getenv(const char *env)
       }
     return (res);
 }
-  
 
-int main(void)
-{
+char  *validator(char **command)
+{  
 	int i;
 	char delim[1]= ":", **token, *tok, *buffer;
 	int len;
 	char function[50];
-	char **name;
-
-	scanf("%s", function);
-
+	
+	//scanf("%s", function);
 	i = 0;
-
+	
 	len = printf("%s\n", getenv("PATH"));
 
 	buffer = getenv("PATH");
@@ -72,7 +69,12 @@ int main(void)
 		}
 	}
 	i = 0;
-	char temp[50];
+	char *temp;
+	temp = malloc((strlen(command[1]) + 1));
+	if (temp == NULL)
+	  return (NULL);
+	
+	//char *av[];
 	
 	while (token[i])
 	{
@@ -83,26 +85,42 @@ int main(void)
 	    {
 	      while ((dir = readdir(d)) != NULL)
 		{
-		  if((strcmp(dir->d_name, function)) == 0)
+		  if((strcmp(dir->d_name, command[1])) == 0)
 		    {
 		      strcpy(temp, token[i]);
 		      strcat(temp, "/");
 		      strcat(temp, dir->d_name);
 		      printf("folder : %s\n", temp);
 		      char *av[] = {temp,NULL};
-		      execve(av[0],av,NULL);
+		      closedir(d);
+		      //execve(av[0],av,NULL);
+		      return(temp);
 		    }
 		}
 	      closedir(d);
 	      i++;
-		
 	    }
 	}
-	
-	return(0);
+	temp = command[1];
+	return(temp);
 }
 /**
   VALIDATOR EXEC
 
  */
+
+
+int main(int argc,char *argv[])
+{
+
+  char *f;
+ 
+  printf("argv = [%s] argv1 = [%s]\n",argv[0],argv[1]);
+  
+  f = validator(argv);
+  printf("ret = [%s]\n", f);
+  execve(f, argv, NULL);
+  //free(temp);
+  return(0);
+}
 
